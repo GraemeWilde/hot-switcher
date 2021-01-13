@@ -1,0 +1,16 @@
+{
+  "hotswitcher.configGui.title": "Hot Switcher Config",
+  "hotswitcher.configGui.cancel": "Cancel",
+  "hotswitcher.configGui.done": "Done",
+  "hotswitcher.configGui.swapBarCount.title": "Swap Hot Bar Count",
+  "hotswitcher.configGui.swapSlotCount.title": "Swap Slot Count",
+  "hotswitcher.configGui.enableHotbarInContainer.title": "Make Hotbar Keybinds Usable in Containers",
+  "hotswitcher.configGui.enableHotbarInContainer.tooltip": "Enabling this allow you to change the active hotbar slot when a container is open. Both the scroll wheel and the hotbar keybinds should work, but if the keys would normally do something else in the container screen, that will take precedence.",
+
+
+  "key.categories.hotswitcher": "Hot Switcher",
+  "key.hotswitcher.swap_hotbar": "Swap Hotbar",
+  "key.hotswitcher.swap_hotbar_reverse": "Swap Hotbar Reverse",
+  "key.hotswitcher.swap_slot": "Swap Slot",
+  "key.hotswitcher.swap_slot_reverse": "Swap Slot Reverse"
+}

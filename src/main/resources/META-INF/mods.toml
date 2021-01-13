@@ -1,0 +1,11 @@
+modLoader="javafml"
+
+loaderVersion="[35,)"
+
+license="All rights reserved"
+
+[[mods]]
+    modId="hotswitcher" #mandatory
+    version="${file.jarVersion}"
+    displayName="Hot Switcher"
+    description='''Mod for swapping the hotbar.'''
