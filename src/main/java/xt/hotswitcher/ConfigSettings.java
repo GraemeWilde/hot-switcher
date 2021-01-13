@@ -73,7 +73,7 @@ public class ConfigSettings {
         this.swapSlotCount += increment;
 
         if (this.swapSlotCount > MAX_SWAP_COUNT) {
-            this.swapBarCount = (this.swapBarCount - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
+            this.swapSlotCount = (this.swapSlotCount - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
         }
     }
 

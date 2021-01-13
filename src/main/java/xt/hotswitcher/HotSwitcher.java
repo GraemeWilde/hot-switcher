@@ -1,6 +1,8 @@
 package xt.hotswitcher;
 
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
@@ -8,15 +10,16 @@ import net.minecraft.client.gui.screen.inventory.CreativeScreen;
 import net.minecraft.client.multiplayer.PlayerController;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
+import net.minecraft.command.Commands;
+import net.minecraft.command.impl.BanCommand;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Slot;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -104,6 +107,8 @@ public class HotSwitcher {
         }*/
     }
 
+
+
     private void clientSetup(final FMLClientSetupEvent event) {
         // Register keybindings. They will now show up on the controls screen allowing users to change them
         ClientRegistry.registerKeyBinding(cycle_hotbar);
@@ -113,6 +118,7 @@ public class HotSwitcher {
 
         MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedIn);
         MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedOut);
+        MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
     }
 
     public void clientPlayerLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
@@ -136,6 +142,13 @@ public class HotSwitcher {
                 event.setCanceled(true);
             }
         }
+    }
+
+    public void registerCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("hotswitcher")
+        .executes(
+                context -> { Minecraft.getInstance().displayGuiScreen(new ConfigScreen(null)); return 0; }
+                ));
     }
 
     public void onInputEvent(InputEvent.KeyInputEvent event) {
