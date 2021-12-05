@@ -66,7 +66,7 @@ public class HotSwitcher {
         // watch for the binding when the chest screen is open (Normally chest screen blocks bindings).
         Field keyBindingHashField;
         try {
-            keyBindingHashField = KeyBinding.class.getDeclaredField("HASH");
+            keyBindingHashField = KeyBinding.class.getDeclaredField("MAP");
             keyBindingHashField.setAccessible(true);
             HASH = (KeyBindingMap)keyBindingHashField.get(null);
 
@@ -137,8 +137,8 @@ public class HotSwitcher {
         if (ConfigSettings.getConfigEnableHotbarInContainers()) {
 
             // Allow scrolling the hotbar when container is open
-            if (Minecraft.getInstance().currentScreen instanceof ContainerScreen) {
-                Objects.requireNonNull(Minecraft.getInstance().player).inventory.changeCurrentItem((int) event.getScrollDelta());
+            if (Minecraft.getInstance().screen instanceof ContainerScreen) {
+                Objects.requireNonNull(Minecraft.getInstance().player).inventory.swapPaint((int) event.getScrollDelta());
                 event.setCanceled(true);
             }
         }
@@ -147,7 +147,7 @@ public class HotSwitcher {
     public void registerCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("hotswitcher")
         .executes(
-                context -> { Minecraft.getInstance().displayGuiScreen(new ConfigScreen(null)); return 0; }
+                context -> { Minecraft.getInstance().setScreen(new ConfigScreen(null)); return 0; }
                 ));
     }
 
@@ -164,8 +164,8 @@ public class HotSwitcher {
 
         if (event.getAction() == GLFW.GLFW_PRESS) {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.currentScreen == null || minecraft.currentScreen.passEvents
-                    || minecraft.currentScreen instanceof ContainerScreen) {
+            if (minecraft.screen == null || minecraft.screen.passEvents
+                    || minecraft.screen instanceof ContainerScreen) {
 
                 // For each active mod key, search keybindings for modkey + keycode (Uses reflection because of private
                 // fields), then add to list of keybindings that should be activated
@@ -173,10 +173,10 @@ public class HotSwitcher {
                 mods.forEach(keyMod -> {
                     try {
                         KeyBinding bind = (KeyBinding) GET_BINDING_METHOD
-                                .invoke(HASH, InputMappings.getInputByCode(event.getKey(), event.getScanCode()), keyMod);
+                                .invoke(HASH, InputMappings.getKey(event.getKey(), event.getScanCode()), keyMod);
                         if (bind != null) {
                             keyBinds.add(bind);
-                            HotSwitcher.LOGGER.info("Keybind Description: " + bind.getKeyDescription());
+                            HotSwitcher.LOGGER.info("Keybind Description: " + bind.getName());
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
@@ -188,43 +188,43 @@ public class HotSwitcher {
                 if (keyBinds.isEmpty()) {
                     try {
                         KeyBinding bind = (KeyBinding) GET_BINDING_METHOD
-                                .invoke(HASH, InputMappings.getInputByCode(event.getKey(), event.getScanCode()), KeyModifier.NONE);
+                                .invoke(HASH, InputMappings.getKey(event.getKey(), event.getScanCode()), KeyModifier.NONE);
                         if (bind != null) {
                             keyBinds.add(bind);
-                            HotSwitcher.LOGGER.info("Keybind Description: " + bind.getKeyDescription());
+                            HotSwitcher.LOGGER.info("Keybind Description: " + bind.getName());
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
                     }
                 }
 
-                PlayerController playerController = Objects.requireNonNull(minecraft.playerController);
+                PlayerController playerController = Objects.requireNonNull(minecraft.gameMode);
                 ClientPlayerEntity player = Objects.requireNonNull(minecraft.player);
 
                 // Container screens have different slotIds and windowId
                 int invBottomLeftSlot = -1;
                 int container;
-                if (minecraft.currentScreen instanceof ContainerScreen) {
-                    container = player.openContainer.windowId;
-                    List<Slot> inv = ((ContainerScreen<?>) minecraft.currentScreen).getContainer().inventorySlots;
+                if (minecraft.screen instanceof ContainerScreen) {
+                    container = player.containerMenu.containerId;
+                    List<Slot> inv = ((ContainerScreen<?>) minecraft.screen).getMenu().slots;
                     for (Slot slot : inv) {
-                        if (slot.inventory == player.inventory) {
+                        if (slot.container == player.inventory) {
                             if (slot.getSlotIndex() == 27) {
-                                HotSwitcher.LOGGER.info("Slot number: " + slot.slotNumber);
-                                invBottomLeftSlot = slot.slotNumber;
+                                HotSwitcher.LOGGER.info("Slot number: " + slot.index);
+                                invBottomLeftSlot = slot.index;
                                 break;
                             }
                         }
                     }
                 } else {
                     invBottomLeftSlot = 27;
-                    container = player.container.windowId;
+                    container = player.containerMenu.containerId;
                 }
                 if (invBottomLeftSlot == -1) {
                     HotSwitcher.LOGGER.info("Error finding inventory slot 27");
                     return;
                 // Creative Inventory Screen hack
-                } else if (invBottomLeftSlot == 0 && minecraft.currentScreen instanceof CreativeScreen) {
+                } else if (invBottomLeftSlot == 0 && minecraft.screen instanceof CreativeScreen) {
                     invBottomLeftSlot = 27;
                 }
 
@@ -233,7 +233,7 @@ public class HotSwitcher {
                     // end result should be rotating all configured rows down
                     for (int j = ConfigSettings.getConfigSwapBarCount() - 1; j >= 0; j--) {
                         for (int i = 0; i < 9; i++) {
-                            playerController.windowClick(container, invBottomLeftSlot - j * 9 + i, i, ClickType.SWAP, player);
+                            playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + i, i, ClickType.SWAP, player);
                         }
                     }
                 }
@@ -243,7 +243,7 @@ public class HotSwitcher {
                     // end result should be rotating all configured rows down
                     for (int j = 0; j <= ConfigSettings.getConfigSwapBarCount() - 1; j++) {
                         for (int i = 0; i < 9; i++) {
-                            playerController.windowClick(container, invBottomLeftSlot - j * 9 + i, i, ClickType.SWAP, player);
+                            playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + i, i, ClickType.SWAP, player);
                         }
                     }
                 }
@@ -252,23 +252,23 @@ public class HotSwitcher {
                     // Swap active slot with highest configured inventory active slot in same column, repeat with each
                     // lower inventory slot, end result should be rotating all configured rows down
                     for (int j = ConfigSettings.getConfigSwapSlotCount() - 1; j >= 0; j--) {
-                        playerController.windowClick(container, invBottomLeftSlot - j * 9 + player.inventory.currentItem, player.inventory.currentItem, ClickType.SWAP, player);
+                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.inventory.selected, player.inventory.selected, ClickType.SWAP, player);
                     }
                 }
                 if (keyBinds.contains(cycle_slot_reverse)) {
                     // Swap active slot with lowest inventory active slot in same column, repeat with each higher
                     // configured inventory slot, end result should be rotating all configured slots up
                     for (int j = 0; j <= ConfigSettings.getConfigSwapSlotCount() - 1; j++) {
-                        playerController.windowClick(container, invBottomLeftSlot - j * 9 + player.inventory.currentItem, player.inventory.currentItem, ClickType.SWAP, player);
+                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.inventory.selected, player.inventory.selected, ClickType.SWAP, player);
                     }
                 }
 
                 if (ConfigSettings.getConfigEnableHotbarInContainers()) {
-                    if (minecraft.currentScreen instanceof ContainerScreen) {
+                    if (minecraft.screen instanceof ContainerScreen) {
                         for (int i = 0; i < 9; i++) {
                             //this.player.inventory.currentItem = i;
-                            if (keyBinds.contains(minecraft.gameSettings.keyBindsHotbar[i])) {
-                                player.inventory.currentItem = i;
+                            if (keyBinds.contains(minecraft.options.keyHotbarSlots[i])) {
+                                player.inventory.selected = i;
                             }
                         }
                     }

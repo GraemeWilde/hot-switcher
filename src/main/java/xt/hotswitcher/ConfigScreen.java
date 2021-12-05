@@ -45,13 +45,13 @@ public final class ConfigScreen extends Screen {
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         this.optionsRowList.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.font.drawString(matrixStack, this.title.getString(),
-                (float)this.width / 2 - ((float)this.font.getStringWidth(this.title.getString()) / 2),
+        this.font.draw(matrixStack, this.title.getString(),
+                (float)this.width / 2 - ((float)this.font.width(this.title.getString()) / 2),
                 TITLE_HEIGHT,
                 0xFFFFFF);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        List<IReorderingProcessor> list = SettingsScreen.func_243293_a(this.optionsRowList, mouseX, mouseY);
+        List<IReorderingProcessor> list = SettingsScreen.tooltipAt(this.optionsRowList, mouseX, mouseY);
         if (list != null) {
             this.renderTooltip(matrixStack, list, mouseX, mouseY);
         }
@@ -69,7 +69,7 @@ public final class ConfigScreen extends Screen {
         );
         HotSwitcher.LOGGER.info("Init Config Screen");
 
-        this.optionsRowList.addOption(new IteratableOption(
+        this.optionsRowList.addBig(new IteratableOption(
                 "hotswitcher.configGui.swapBarCount.title",
                 (unused, newValue) -> settings.incrementSwapBarCount(newValue),
                 (gameSettings, option) ->
@@ -77,7 +77,7 @@ public final class ConfigScreen extends Screen {
                                 .append(new StringTextComponent(": " + settings.getSwapBarCount()))
         ));
 
-        this.optionsRowList.addOption(new IteratableOption(
+        this.optionsRowList.addBig(new IteratableOption(
                 "hotswitcher.configGui.swapSlotCount.title",
                 (unused, newValue) -> settings.incrementSwapSlotCount(newValue),
                 (gameSettings, option) ->
@@ -85,7 +85,7 @@ public final class ConfigScreen extends Screen {
                                 .append(new StringTextComponent(": " + settings.getSwapSlotCount()))
         ));
 
-        this.optionsRowList.addOption(new BooleanOption(
+        this.optionsRowList.addBig(new BooleanOption(
                 "hotswitcher.configGui.enableHotbarInContainer.title",
                 new TranslationTextComponent("hotswitcher.configGui.enableHotbarInContainer.tooltip"),
                 unused -> settings.getEnableHotbarInContainers(),
@@ -123,12 +123,12 @@ public final class ConfigScreen extends Screen {
     }
 
     private void cancel() {
-        Objects.requireNonNull(this.minecraft).displayGuiScreen(parentScreen);
+        Objects.requireNonNull(this.minecraft).setScreen(parentScreen);
     }
 
     private void done() {
         this.settings.saveSettings();
-        Objects.requireNonNull(this.minecraft).displayGuiScreen(parentScreen);
+        Objects.requireNonNull(this.minecraft).setScreen(parentScreen);
     }
 
     @Override
