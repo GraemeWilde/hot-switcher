@@ -1,6 +1,7 @@
 package xt.hotswitcher;
 
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -16,6 +17,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -30,9 +33,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.util.thread.SidedThreadGroups;
-import net.minecraftforge.fmlclient.ConfigGuiHandler;
-import net.minecraftforge.fmlclient.registry.ClientRegistry;
+import net.minecraftforge.client.ClientRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -59,10 +60,12 @@ public class HotSwitcher {
     public static final KeyMapping cycle_slot = new KeyMapping("key.hotswitcher.swap_slot", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
     public static final KeyMapping cycle_slot_reverse = new KeyMapping("key.hotswitcher.swap_slot_reverse", KeyConflictContext.UNIVERSAL, KeyModifier.ALT, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
 
+    public static final KeyMapping config = new KeyMapping("key.hotswitcher.config", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, "key.categories.hotswitcher");
+
     public KeyMapping[] hotbarKeybindings = new KeyMapping[]{};
 
     Consumer<InputEvent.KeyInputEvent> keyInputEventHandler;
-    Consumer<GuiScreenEvent.MouseScrollEvent.Post> guiScrollEventHandler;
+    Consumer<ScreenEvent.MouseScrollEvent.Post> guiScrollEventHandler;
 
     static {
         // Reflection to get access to the keybindings map and its getBinding function
@@ -121,15 +124,31 @@ public class HotSwitcher {
         ClientRegistry.registerKeyBinding(cycle_slot);
         ClientRegistry.registerKeyBinding(cycle_slot_reverse);
 
-//        if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
+        ClientRegistry.registerKeyBinding(config);
+
+
+        //if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
+            HotSwitcher.LOGGER.info("ClientSide?");
             MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedIn);
             MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedOut);
             MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
+        //}
+
+        MinecraftForge.EVENT_BUS.addListener(this::clientChatEvent);
 //            HotSwitcher.LOGGER.info("CLIENT.");
 //        } else {
 //            HotSwitcher.LOGGER.info("Not CLIENT!?");
 //        }
     }
+
+    public void clientChatEvent(ClientChatEvent event) {
+        HotSwitcher.LOGGER.info("ChatEvent: " + event.getOriginalMessage());
+        if (event.getOriginalMessage().equals("/hotswitcher")) {
+            Minecraft.getInstance().setScreen(new ConfigScreen(null));
+            event.setCanceled(true);
+        }
+    }
+
 
     public void clientPlayerLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
         HotSwitcher.LOGGER.info("Client Logged In");
@@ -143,7 +162,7 @@ public class HotSwitcher {
         MinecraftForge.EVENT_BUS.unregister(guiScrollEventHandler);
     }
 
-    public void guiMouseScrollEvent(GuiScreenEvent.MouseScrollEvent.Post event) {
+    public void guiMouseScrollEvent(ScreenEvent.MouseScrollEvent.Post event) {
         if (ConfigSettings.getConfigEnableHotbarInContainers()) {
 
             // Allow scrolling the hotbar when container is open
@@ -159,16 +178,16 @@ public class HotSwitcher {
         event.getDispatcher().register(Commands.literal("hotswitcher")
                 .executes(
                         context -> {
-                            if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
-                                DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> {
-                                    HotSwitcher.LOGGER.info("Client.");
-                                    Minecraft.getInstance().setScreen(new ConfigScreen(null));
-                                    return null;
-                                });
-                            } else {
-                                HotSwitcher.LOGGER.info("Not CLIENT!?");
-                            }
-                            //Minecraft.getInstance().setScreen(null);
+//                            if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
+//                                //DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> {
+//                                    HotSwitcher.LOGGER.info("Client.");
+//                                    Minecraft.getInstance().setScreen(new ConfigScreen(null));
+//                                    //return null;
+//                                //});
+//                            } else {
+//                                HotSwitcher.LOGGER.info("Not CLIENT!?");
+//                            }
+//                            //Minecraft.getInstance().setScreen(null);
                             return 0;
                         }
                 ));
@@ -284,6 +303,10 @@ public class HotSwitcher {
                     for (int j = 0; j <= ConfigSettings.getConfigSwapSlotCount() - 1; j++) {
                         playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.getInventory().selected, player.getInventory().selected, ClickType.SWAP, player);
                     }
+                }
+
+                if (keyBinds.contains(config)) {
+                    Minecraft.getInstance().setScreen(new ConfigScreen(null));
                 }
 
                 if (ConfigSettings.getConfigEnableHotbarInContainers()) {

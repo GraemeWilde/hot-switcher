@@ -42,16 +42,17 @@ public final class ConfigScreen extends Screen {
     @Override
     @ParametersAreNonnullByDefault
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        HotSwitcher.LOGGER.info("Render Start Config Screen");
+        //HotSwitcher.LOGGER.info("Render Start Config Screen");
         this.renderBackground(matrixStack);
         this.optionsRowList.render(matrixStack, mouseX, mouseY, partialTicks);
         this.font.draw(matrixStack, this.title.getString(),
                 (float)this.width / 2 - ((float)this.font.width(this.title.getString()) / 2),
                 TITLE_HEIGHT,
                 0xFFFFFF);
+        //HotSwitcher.LOGGER.info("Render End Config Screen");
         super.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        HotSwitcher.LOGGER.info("Render End Config Screen");
+
 
 //        List<FormattedCharSequence> list = OptionsSubScreen.tooltipAt(this.optionsRowList, mouseX, mouseY);
 //        if (list != null) {
@@ -61,6 +62,8 @@ public final class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        //super.init();
+
         HotSwitcher.LOGGER.info("Init Start Config Screen");
         settings = ConfigSettings.currentSettings();
 
@@ -161,8 +164,7 @@ public final class ConfigScreen extends Screen {
                 button -> this.done()
         ));
 
-        super.init();
-        HotSwitcher.LOGGER.info("Init End Config Screen");
+        //HotSwitcher.LOGGER.info("Init End Config Screen");
     }
 
     @Override
