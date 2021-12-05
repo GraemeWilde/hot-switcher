@@ -5,6 +5,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 public class ConfigSettings {
     private static final int MIN_SWAP_COUNT = 0;
     private static final int MAX_SWAP_COUNT = 3;
+    private static final int DEFAULT_SWAP_BARS = 3;
+    private static final int DEFAULT_SWAP_SLOTS = 3;
     private static ForgeConfigSpec.IntValue configSwapBarCount;
     private static ForgeConfigSpec.IntValue configSwapSlotCount;
     private static ForgeConfigSpec.BooleanValue configEnableHotbarInContainers;
@@ -23,9 +25,9 @@ public class ConfigSettings {
 
     public static void init(ForgeConfigSpec.Builder config) {
         configSwapBarCount = config.comment("Swap Bar Count")
-                .defineInRange("swap_bar_count", 1, MIN_SWAP_COUNT, MAX_SWAP_COUNT);
+                .defineInRange("swap_bar_count", DEFAULT_SWAP_BARS, MIN_SWAP_COUNT, MAX_SWAP_COUNT);
         configSwapSlotCount = config.comment("Swap Slot Count")
-                .defineInRange("swap_slot_count", 1, MIN_SWAP_COUNT, MAX_SWAP_COUNT);
+                .defineInRange("swap_slot_count", DEFAULT_SWAP_SLOTS, MIN_SWAP_COUNT, MAX_SWAP_COUNT);
         configEnableHotbarInContainers = config.comment("Enable Hotbar in Containers")
                 .define("hotbar_in_containers", true);
     }
@@ -50,11 +52,11 @@ public class ConfigSettings {
     public boolean getEnableHotbarInContainers() { return this.enableHotbarInContainers; }
 
     public void setSwapBarCount(int count) {
-        this.swapBarCount = (count - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
+        this.swapBarCount = count;//(count - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
     }
 
     public void setSwapSlotCount(int count) {
-        this.swapSlotCount = (count - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
+        this.swapSlotCount = count;//(count - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
     }
 
     public void setEnableHotbarInContainers(boolean enable) {

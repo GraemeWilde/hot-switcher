@@ -1,19 +1,21 @@
 package xt.hotswitcher;
 
 
-import com.mojang.brigadier.Command;
-import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.screen.inventory.CreativeScreen;
-import net.minecraft.client.multiplayer.PlayerController;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.command.Commands;
-import net.minecraft.command.impl.BanCommand;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Slot;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.commands.Commands;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -21,14 +23,16 @@ import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.util.thread.SidedThreadGroups;
+import net.minecraftforge.fmlclient.ConfigGuiHandler;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -40,7 +44,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Mod("hotswitcher")
-@Mod.EventBusSubscriber//(Dist.CLIENT)
+//@Mod.EventBusSubscriber(Dist.CLIENT)//(Dist.CLIENT)
 //@Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class HotSwitcher {
     public static final String MOD_ID = "hotswitcher";
@@ -49,13 +53,13 @@ public class HotSwitcher {
     private static final KeyBindingMap HASH;
     private static final Method GET_BINDING_METHOD;
 
-    public static final KeyBinding cycle_hotbar = new KeyBinding("key.hotswitcher.swap_hotbar", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.hotswitcher");
-    public static final KeyBinding cycle_hotbar_reverse = new KeyBinding("key.hotswitcher.swap_hotbar_reverse", KeyConflictContext.UNIVERSAL, KeyModifier.ALT, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.hotswitcher");
+    public static final KeyMapping cycle_hotbar = new KeyMapping("key.hotswitcher.swap_hotbar", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.hotswitcher");
+    public static final KeyMapping cycle_hotbar_reverse = new KeyMapping("key.hotswitcher.swap_hotbar_reverse", KeyConflictContext.UNIVERSAL, KeyModifier.ALT, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.hotswitcher");
 
-    public static final KeyBinding cycle_slot = new KeyBinding("key.hotswitcher.swap_slot", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
-    public static final KeyBinding cycle_slot_reverse = new KeyBinding("key.hotswitcher.swap_slot_reverse", KeyConflictContext.UNIVERSAL, KeyModifier.ALT, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
+    public static final KeyMapping cycle_slot = new KeyMapping("key.hotswitcher.swap_slot", KeyConflictContext.UNIVERSAL, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
+    public static final KeyMapping cycle_slot_reverse = new KeyMapping("key.hotswitcher.swap_slot_reverse", KeyConflictContext.UNIVERSAL, KeyModifier.ALT, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.hotswitcher");
 
-    public KeyBinding[] hotbarKeybindings = new KeyBinding[]{};
+    public KeyMapping[] hotbarKeybindings = new KeyMapping[]{};
 
     Consumer<InputEvent.KeyInputEvent> keyInputEventHandler;
     Consumer<GuiScreenEvent.MouseScrollEvent.Post> guiScrollEventHandler;
@@ -66,11 +70,11 @@ public class HotSwitcher {
         // watch for the binding when the chest screen is open (Normally chest screen blocks bindings).
         Field keyBindingHashField;
         try {
-            keyBindingHashField = KeyBinding.class.getDeclaredField("MAP");
+            keyBindingHashField = KeyMapping.class.getDeclaredField("MAP");
             keyBindingHashField.setAccessible(true);
             HASH = (KeyBindingMap)keyBindingHashField.get(null);
 
-            GET_BINDING_METHOD = KeyBindingMap.class.getDeclaredMethod("getBinding", InputMappings.Input.class, KeyModifier.class);
+            GET_BINDING_METHOD = KeyBindingMap.class.getDeclaredMethod("getBinding", InputConstants.Key.class, KeyModifier.class);
             GET_BINDING_METHOD.setAccessible(true);
         } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -88,8 +92,9 @@ public class HotSwitcher {
 
         // Register my config screen to forge
         ModLoadingContext.get().registerExtensionPoint(
-                ExtensionPoint.CONFIGGUIFACTORY,
-                () -> (mc, screen) -> new ConfigScreen(screen)
+                ConfigGuiHandler.ConfigGuiFactory.class,
+                () -> new ConfigGuiHandler.ConfigGuiFactory((mc, screen) -> new ConfigScreen(screen))
+                //() -> (mc, screen) -> new ConfigScreen(screen)
         );
 
         keyInputEventHandler = this::onInputEvent;
@@ -116,9 +121,14 @@ public class HotSwitcher {
         ClientRegistry.registerKeyBinding(cycle_slot);
         ClientRegistry.registerKeyBinding(cycle_slot_reverse);
 
-        MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedIn);
-        MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedOut);
-        MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
+//        if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
+            MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedIn);
+            MinecraftForge.EVENT_BUS.addListener(this::clientPlayerLoggedOut);
+            MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
+//            HotSwitcher.LOGGER.info("CLIENT.");
+//        } else {
+//            HotSwitcher.LOGGER.info("Not CLIENT!?");
+//        }
     }
 
     public void clientPlayerLoggedIn(ClientPlayerNetworkEvent.LoggedInEvent event) {
@@ -137,17 +147,30 @@ public class HotSwitcher {
         if (ConfigSettings.getConfigEnableHotbarInContainers()) {
 
             // Allow scrolling the hotbar when container is open
-            if (Minecraft.getInstance().screen instanceof ContainerScreen) {
-                Objects.requireNonNull(Minecraft.getInstance().player).inventory.swapPaint((int) event.getScrollDelta());
+            if (Minecraft.getInstance().screen instanceof AbstractContainerScreen) {
+                Objects.requireNonNull(Minecraft.getInstance().player).getInventory().swapPaint((int) event.getScrollDelta());
                 event.setCanceled(true);
             }
         }
     }
 
     public void registerCommands(RegisterCommandsEvent event) {
+
         event.getDispatcher().register(Commands.literal("hotswitcher")
-        .executes(
-                context -> { Minecraft.getInstance().setScreen(new ConfigScreen(null)); return 0; }
+                .executes(
+                        context -> {
+                            if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide) {
+                                DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> {
+                                    HotSwitcher.LOGGER.info("Client.");
+                                    Minecraft.getInstance().setScreen(new ConfigScreen(null));
+                                    return null;
+                                });
+                            } else {
+                                HotSwitcher.LOGGER.info("Not CLIENT!?");
+                            }
+                            //Minecraft.getInstance().setScreen(null);
+                            return 0;
+                        }
                 ));
     }
 
@@ -165,15 +188,15 @@ public class HotSwitcher {
         if (event.getAction() == GLFW.GLFW_PRESS) {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.screen == null || minecraft.screen.passEvents
-                    || minecraft.screen instanceof ContainerScreen) {
+                    || minecraft.screen instanceof AbstractContainerScreen) {
 
                 // For each active mod key, search keybindings for modkey + keycode (Uses reflection because of private
                 // fields), then add to list of keybindings that should be activated
-                ArrayList<KeyBinding> keyBinds = new ArrayList<>();
+                ArrayList<KeyMapping> keyBinds = new ArrayList<>();
                 mods.forEach(keyMod -> {
                     try {
-                        KeyBinding bind = (KeyBinding) GET_BINDING_METHOD
-                                .invoke(HASH, InputMappings.getKey(event.getKey(), event.getScanCode()), keyMod);
+                        KeyMapping bind = (KeyMapping) GET_BINDING_METHOD
+                                .invoke(HASH, InputConstants.getKey(event.getKey(), event.getScanCode()), keyMod);
                         if (bind != null) {
                             keyBinds.add(bind);
                             HotSwitcher.LOGGER.info("Keybind Description: " + bind.getName());
@@ -187,8 +210,8 @@ public class HotSwitcher {
                 // ex. player may be holding shift/control to crouch/sprint, but also trying to use our keybinding
                 if (keyBinds.isEmpty()) {
                     try {
-                        KeyBinding bind = (KeyBinding) GET_BINDING_METHOD
-                                .invoke(HASH, InputMappings.getKey(event.getKey(), event.getScanCode()), KeyModifier.NONE);
+                        KeyMapping bind = (KeyMapping) GET_BINDING_METHOD
+                                .invoke(HASH, InputConstants.getKey(event.getKey(), event.getScanCode()), KeyModifier.NONE);
                         if (bind != null) {
                             keyBinds.add(bind);
                             HotSwitcher.LOGGER.info("Keybind Description: " + bind.getName());
@@ -198,17 +221,17 @@ public class HotSwitcher {
                     }
                 }
 
-                PlayerController playerController = Objects.requireNonNull(minecraft.gameMode);
-                ClientPlayerEntity player = Objects.requireNonNull(minecraft.player);
+                MultiPlayerGameMode playerController = Objects.requireNonNull(minecraft.gameMode);
+                LocalPlayer player = Objects.requireNonNull(minecraft.player);
 
                 // Container screens have different slotIds and windowId
                 int invBottomLeftSlot = -1;
                 int container;
-                if (minecraft.screen instanceof ContainerScreen) {
+                if (minecraft.screen instanceof AbstractContainerScreen) {
                     container = player.containerMenu.containerId;
-                    List<Slot> inv = ((ContainerScreen<?>) minecraft.screen).getMenu().slots;
+                    List<Slot> inv = ((AbstractContainerScreen<?>) minecraft.screen).getMenu().slots;
                     for (Slot slot : inv) {
-                        if (slot.container == player.inventory) {
+                        if (slot.container == player.getInventory()) {
                             if (slot.getSlotIndex() == 27) {
                                 HotSwitcher.LOGGER.info("Slot number: " + slot.index);
                                 invBottomLeftSlot = slot.index;
@@ -224,7 +247,7 @@ public class HotSwitcher {
                     HotSwitcher.LOGGER.info("Error finding inventory slot 27");
                     return;
                 // Creative Inventory Screen hack
-                } else if (invBottomLeftSlot == 0 && minecraft.screen instanceof CreativeScreen) {
+                } else if (invBottomLeftSlot == 0 && minecraft.screen instanceof CreativeModeInventoryScreen) {
                     invBottomLeftSlot = 27;
                 }
 
@@ -252,23 +275,23 @@ public class HotSwitcher {
                     // Swap active slot with highest configured inventory active slot in same column, repeat with each
                     // lower inventory slot, end result should be rotating all configured rows down
                     for (int j = ConfigSettings.getConfigSwapSlotCount() - 1; j >= 0; j--) {
-                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.inventory.selected, player.inventory.selected, ClickType.SWAP, player);
+                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.getInventory().selected, player.getInventory().selected, ClickType.SWAP, player);
                     }
                 }
                 if (keyBinds.contains(cycle_slot_reverse)) {
                     // Swap active slot with lowest inventory active slot in same column, repeat with each higher
                     // configured inventory slot, end result should be rotating all configured slots up
                     for (int j = 0; j <= ConfigSettings.getConfigSwapSlotCount() - 1; j++) {
-                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.inventory.selected, player.inventory.selected, ClickType.SWAP, player);
+                        playerController.handleInventoryMouseClick(container, invBottomLeftSlot - j * 9 + player.getInventory().selected, player.getInventory().selected, ClickType.SWAP, player);
                     }
                 }
 
                 if (ConfigSettings.getConfigEnableHotbarInContainers()) {
-                    if (minecraft.screen instanceof ContainerScreen) {
+                    if (minecraft.screen instanceof AbstractContainerScreen) {
                         for (int i = 0; i < 9; i++) {
                             //this.player.inventory.currentItem = i;
                             if (keyBinds.contains(minecraft.options.keyHotbarSlots[i])) {
-                                player.inventory.selected = i;
+                                player.getInventory().selected = i;
                             }
                         }
                     }
