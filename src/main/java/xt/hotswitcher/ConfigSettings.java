@@ -6,7 +6,7 @@ public class ConfigSettings {
     private static final int MIN_SWAP_COUNT = 0;
     private static final int MAX_SWAP_COUNT = 3;
     private static final int DEFAULT_SWAP_BARS = 3;
-    private static final int DEFAULT_SWAP_SLOTS = 3;
+    private static final int DEFAULT_SWAP_SLOTS = 1;
     private static ForgeConfigSpec.IntValue configSwapBarCount;
     private static ForgeConfigSpec.IntValue configSwapSlotCount;
     private static ForgeConfigSpec.BooleanValue configEnableHotbarInContainers;

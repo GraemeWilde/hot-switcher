@@ -2,15 +2,24 @@
   "hotswitcher.configGui.title": "Hot Switcher Config",
   "hotswitcher.configGui.cancel": "Cancel",
   "hotswitcher.configGui.done": "Done",
+
   "hotswitcher.configGui.swapBarCount.title": "Swap Hot Bar Count",
+  "hotswitcher.configGui.swapBarCount.tooltip": "The number of inventory rows that should cycle position when the Swap Hotbar key is pressed. Default: 3",
+
   "hotswitcher.configGui.swapSlotCount.title": "Swap Slot Count",
+  "hotswitcher.configGui.swapSlotCount.tooltip": "The number of inventory row slots that should cycle position in the active hotbar slot column when the Swap Slot key is pressed. Default: 1",
+
   "hotswitcher.configGui.enableHotbarInContainer.title": "Make Hotbar Keybinds Usable in Containers",
-  "hotswitcher.configGui.enableHotbarInContainer.tooltip": "Enabling this allow you to change the active hotbar slot when a container is open. Both the scroll wheel and the hotbar keybinds should work, but if the keys would normally do something else in the container screen, that will take precedence.",
+  "hotswitcher.configGui.enableHotbarInContainer.tooltip": "Enabling this allow you to change the active hotbar slot when a container is open. Both the scroll wheel and the hotbar keybinds should work, but if the keys would normally do something else in the container screen, then that will take precedence. Default: On",
 
 
   "key.categories.hotswitcher": "Hot Switcher",
   "key.hotswitcher.swap_hotbar": "Swap Hotbar",
   "key.hotswitcher.swap_hotbar_reverse": "Swap Hotbar Reverse",
   "key.hotswitcher.swap_slot": "Swap Slot",
-  "key.hotswitcher.swap_slot_reverse": "Swap Slot Reverse"
+  "key.hotswitcher.swap_slot_reverse": "Swap Slot Reverse",
+  "key.hotswitcher.config": "Open Hotswitcher Config",
+
+
+  "hotswitcher.load_message": "To open open Hotswitcher configuration, type /hotswitcher or bind a key in keybindings."
 }

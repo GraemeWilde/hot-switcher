@@ -42,22 +42,20 @@ public final class ConfigScreen extends Screen {
     @Override
     @ParametersAreNonnullByDefault
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        //HotSwitcher.LOGGER.info("Render Start Config Screen");
         this.renderBackground(matrixStack);
         this.optionsRowList.render(matrixStack, mouseX, mouseY, partialTicks);
         this.font.draw(matrixStack, this.title.getString(),
                 (float)this.width / 2 - ((float)this.font.width(this.title.getString()) / 2),
                 TITLE_HEIGHT,
                 0xFFFFFF);
-        //HotSwitcher.LOGGER.info("Render End Config Screen");
         super.render(matrixStack, mouseX, mouseY, partialTicks);
 
 
 
-//        List<FormattedCharSequence> list = OptionsSubScreen.tooltipAt(this.optionsRowList, mouseX, mouseY);
-//        if (list != null) {
-//            this.renderTooltip(matrixStack, list, mouseX, mouseY);
-//        }
+        List<FormattedCharSequence> list = OptionsSubScreen.tooltipAt(this.optionsRowList, mouseX, mouseY);
+        if (list != null) {
+            this.renderTooltip(matrixStack, list, mouseX, mouseY);
+        }
     }
 
     @Override
@@ -67,87 +65,75 @@ public final class ConfigScreen extends Screen {
         HotSwitcher.LOGGER.info("Init Start Config Screen");
         settings = ConfigSettings.currentSettings();
 
+        // Create an options list group to put our options into
         this.optionsRowList = new OptionsList(
                 Objects.requireNonNull(this.minecraft), this.width, this.height,
                 OPTIONS_LIST_TOP_HEIGHT,
                 this.height - OPTIONS_LIST_BOTTOM_OFFSET,
                 OPTIONS_LIST_ITEM_HEIGHT
         );
-        HotSwitcher.LOGGER.info("Init Config Screen");
 
-//        Integer[] vals = {1, 2, 3};
-//
-//
-//        CycleOption<Integer> swapBarCount = CycleOption.create(
-//                "hotswitcher.configGui.swapBarCount.title",
-//                new Integer[] {1, 2, 3},
-//                (v) -> new TranslatableComponent("Test"),
-//                (o) -> settings.getSwapBarCount(),
-//                (o1, o2, sbc) -> settings.incrementSwapBarCount(1)
-//        );
-
+        // Create swap bar count option
         this.optionsRowList.addBig(
                 CycleOption.create(
+                        // Title
                         "hotswitcher.configGui.swapBarCount.title",
+
+                        // Values
                         new Integer[] {1, 2, 3},
-                        (v) -> {
-                            HotSwitcher.LOGGER.info("SwapBarCount: " + v);
-                            return new TranslatableComponent(v.toString());
-                        },
-                        (o) -> {
-                            return settings.getSwapBarCount();
-                        },
-                        (o1, o2, sbc) -> {
-                            HotSwitcher.LOGGER.info("SwapBarCount Setter: " + sbc);
-                            settings.setSwapBarCount(sbc);
-                        }
-                )
+
+                        // Displayed value
+                        (value) -> new TranslatableComponent(value.toString()),
+
+                        // Getter to get value
+                        (o) -> settings.getSwapBarCount(),
+
+                        // Setter to set value
+                        (o1, o2, sbc) -> settings.setSwapBarCount(sbc)
+
+                ).setTooltip(m -> (value) -> m.font.split(new TranslatableComponent("hotswitcher.configGui.swapBarCount.tooltip"), 200))
         );
 
+        // Create swap slot count option
         this.optionsRowList.addBig(
                 CycleOption.create(
+                        // Title
                         "hotswitcher.configGui.swapSlotCount.title",
-                        new Integer[] {1, 2, 3},
-                        (v) -> {
-                            HotSwitcher.LOGGER.info("SwapSlotCount: " + v);
-                            return new TranslatableComponent(v.toString());
-                        },
-                        (o) -> {
-                            return settings.getSwapSlotCount();
-                        },
-                        (o1, o2, ssc) -> {
-                            HotSwitcher.LOGGER.info("SwapSlotCount Setter: " + ssc);
-                            settings.setSwapSlotCount(ssc);
-                        }
-                )
-        );
-//                new CycleOption(
-//                "hotswitcher.configGui.swapSlotCount.title",
-//                (unused, newValue) -> settings.incrementSwapSlotCount(newValue),
-//                (gameSettings, option) ->
-//                        new TranslatableComponent("hotswitcher.configGui.swapSlotCount.title")
-//                                .append(new TextComponent(": " + settings.getSwapSlotCount()))
-//        ));
 
+                        // Values
+                        new Integer[] {1, 2, 3},
+
+                        // Displayed value
+                        (v) -> new TranslatableComponent(v.toString()),
+
+                        // Getter to get value
+                        (o) -> settings.getSwapSlotCount(),
+
+                        // Setter to set value
+                        (o1, o2, ssc) -> settings.setSwapSlotCount(ssc)
+
+                ).setTooltip(m -> (value) -> m.font.split(new TranslatableComponent("hotswitcher.configGui.swapSlotCount.tooltip"), 200))
+        );
+
+        // Create enable hotswitcher in containers option
         this.optionsRowList.addBig(
              CycleOption.createOnOff(
+                     // Title
                      "hotswitcher.configGui.enableHotbarInContainer.title",
+
+                     // Getter to get value
                      (o) -> settings.getEnableHotbarInContainers(),
-                     (o1, o2, b) -> {
-                         settings.setEnableHotbarInContainers(b);
-                     }
-             )
+
+                     // Setter to set value
+                     (o1, o2, b) -> settings.setEnableHotbarInContainers(b)
+             ).setTooltip(m -> (value) -> m.font.split(new TranslatableComponent("hotswitcher.configGui.enableHotbarInContainer.tooltip"), 200))
         );
 
-//                new BooleanOption(
-//                "hotswitcher.configGui.enableHotbarInContainer.title",
-//                new TranslatableComponent("hotswitcher.configGui.enableHotbarInContainer.tooltip"),
-//                unused -> settings.getEnableHotbarInContainers(),
-//                (unused, newValue) -> settings.setEnableHotbarInContainers(newValue)
-//        ));
 
+        // Add the options list group to the screen
         this.addWidget(this.optionsRowList);
 
+        // Add a cancel button
         this.addRenderableWidget(new Button(
                 (this.width - BUTTON_WIDTH * 2) / 3,
                 this.height - DONE_BUTTON_TOP_OFFSET,
@@ -156,6 +142,7 @@ public final class ConfigScreen extends Screen {
                 button -> this.cancel()
         ));
 
+        // Add a done button
         this.addRenderableWidget(new Button(
                 (this.width - BUTTON_WIDTH * 2) / 3 * 2 + BUTTON_WIDTH,
                 this.height - DONE_BUTTON_TOP_OFFSET,
@@ -163,12 +150,11 @@ public final class ConfigScreen extends Screen {
                 new TranslatableComponent("hotswitcher.configGui.done"),
                 button -> this.done()
         ));
-
-        //HotSwitcher.LOGGER.info("Init End Config Screen");
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // If escape is pressed, cancel
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.cancel();
             return true;
@@ -177,17 +163,15 @@ public final class ConfigScreen extends Screen {
     }
 
     private void cancel() {
+        // Go back to previous screen (or close screen if there was no previous)
         Objects.requireNonNull(this.minecraft).setScreen(parentScreen);
     }
 
     private void done() {
+        // Save the current settings
         this.settings.saveSettings();
-        Objects.requireNonNull(this.minecraft).setScreen(parentScreen);
-    }
 
-    @Override
-    public void onClose() {
-        HotSwitcher.LOGGER.info("ConfigScreen onClose()");
-        super.onClose();
+        // Go back to previous screen (or close screen if there was no previous)
+        Objects.requireNonNull(this.minecraft).setScreen(parentScreen);
     }
 }
