@@ -2,6 +2,7 @@ package xt.hotswitcher;
 
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -199,11 +200,8 @@ public class HotSwitcher {
         MinecraftForge.EVENT_BUS.addListener(keyInputEventHandler);
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, guiScrollEventHandler);
 
-//        if (Minecraft.getInstance().player != null)
-//            Minecraft.getInstance().player.displayClientMessage(new TextComponent("To open open Hotswitcher configuration, type /hotswitcher or bind a key in keybindings."), true);
-
         if (event.getPlayer() != null)
-            event.getPlayer().displayClientMessage(new TranslatableComponent("hotswitcher.load_message"), false);
+            event.getPlayer().displayClientMessage(new TranslatableComponent("hotswitcher.load_message").withStyle(ChatFormatting.GRAY), false);
     }
 
     public void clientPlayerLoggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {
