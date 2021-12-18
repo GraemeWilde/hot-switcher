@@ -12,6 +12,10 @@
   "hotswitcher.configGui.enableHotbarInContainer.title": "Make Hotbar Keybinds Usable in Containers",
   "hotswitcher.configGui.enableHotbarInContainer.tooltip": "Enabling this allow you to change the active hotbar slot when a container is open. Both the scroll wheel and the hotbar keybinds should work, but if the keys would normally do something else in the container screen, then that will take precedence. Default: On",
 
+  "hotswitcher.configGui.initMessage.title": "Init Message",
+  "hotswitcher.configGui.initMessage.show": "Show",
+  "hotswitcher.configGui.initMessage.hide": "Hide",
+
 
   "key.categories.hotswitcher": "Hot Switcher",
   "key.hotswitcher.swap_hotbar": "Swap Hotbar",

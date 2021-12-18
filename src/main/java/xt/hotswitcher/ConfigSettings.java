@@ -10,10 +10,12 @@ public class ConfigSettings {
     private static ForgeConfigSpec.IntValue configSwapBarCount;
     private static ForgeConfigSpec.IntValue configSwapSlotCount;
     private static ForgeConfigSpec.BooleanValue configEnableHotbarInContainers;
+    private static ForgeConfigSpec.BooleanValue configShowInitMessage;
 
     private int swapBarCount;
     private int swapSlotCount;
     private boolean enableHotbarInContainers;
+    private boolean showInitMessage;
 
 
     public static ConfigSettings currentSettings() {
@@ -30,6 +32,8 @@ public class ConfigSettings {
                 .defineInRange("swap_slot_count", DEFAULT_SWAP_SLOTS, MIN_SWAP_COUNT, MAX_SWAP_COUNT);
         configEnableHotbarInContainers = config.comment("Enable Hotbar in Containers")
                 .define("hotbar_in_containers", true);
+        configShowInitMessage = config.comment("Show Init Message")
+                .define("show_init_message", true);
     }
 
     public static int getConfigSwapBarCount() {
@@ -41,6 +45,7 @@ public class ConfigSettings {
     public static boolean getConfigEnableHotbarInContainers() {
         return configEnableHotbarInContainers.get();
     }
+    public static boolean getConfigShowInitMessage() { return configShowInitMessage.get(); }
 
 
     public int getSwapBarCount() {
@@ -50,6 +55,7 @@ public class ConfigSettings {
         return this.swapSlotCount;
     }
     public boolean getEnableHotbarInContainers() { return this.enableHotbarInContainers; }
+    public boolean getShowInitMessage() { return this.showInitMessage; }
 
     public void setSwapBarCount(int count) {
         this.swapBarCount = count;//(count - MIN_SWAP_COUNT) % (MAX_SWAP_COUNT - MIN_SWAP_COUNT) + MIN_SWAP_COUNT;
@@ -62,6 +68,8 @@ public class ConfigSettings {
     public void setEnableHotbarInContainers(boolean enable) {
         this.enableHotbarInContainers = enable;
     }
+
+    public void setShowInitMessage(boolean show) { this.showInitMessage = show; }
 
     public void incrementSwapBarCount(int increment) {
         this.swapBarCount += increment;
@@ -83,11 +91,13 @@ public class ConfigSettings {
         configSwapBarCount.set(this.swapBarCount);
         configSwapSlotCount.set(this.swapSlotCount);
         configEnableHotbarInContainers.set(this.enableHotbarInContainers);
+        configShowInitMessage.set(this.showInitMessage);
     }
 
     public void getSettings() {
         this.swapBarCount = configSwapBarCount.get();
         this.swapSlotCount = configSwapSlotCount.get();
         this.enableHotbarInContainers = configEnableHotbarInContainers.get();
+        this.showInitMessage = configShowInitMessage.get();
     }
 }

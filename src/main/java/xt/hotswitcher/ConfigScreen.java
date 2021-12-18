@@ -130,6 +130,22 @@ public final class ConfigScreen extends Screen {
         );
 
 
+        // Create show/hide init message option
+        this.optionsRowList.addBig(
+                CycleOption.createBinaryOption(
+                        "hotswitcher.configGui.initMessage.title",
+                        new TranslatableComponent("hotswitcher.configGui.initMessage.show"),
+                        new TranslatableComponent("hotswitcher.configGui.initMessage.hide"),
+                        (o) -> settings.getShowInitMessage(),
+                        (o1, o2, value) -> {
+                            HotSwitcher.LOGGER.debug(o1);
+                            HotSwitcher.LOGGER.debug(o2);
+                            settings.setShowInitMessage(value);
+                        }
+                )
+        );
+
+
         // Add the options list group to the screen
         this.addWidget(this.optionsRowList);
 
