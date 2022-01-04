@@ -1,6 +1,6 @@
 modLoader="javafml"
 
-loaderVersion="[35,)"
+loaderVersion="[39,)"
 
 license="All rights reserved"
 
@@ -9,3 +9,12 @@ license="All rights reserved"
     version="${file.jarVersion}"
     displayName="Hot Switcher"
     description='''Mod for swapping the hotbar.'''
+
+
+[[dependencies.hotswitcher]]
+    modId="minecraft"
+    mandatory=true
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
+    versionRange="[1.18.1,1.19)"
+    ordering="NONE"
+    side="BOTH"

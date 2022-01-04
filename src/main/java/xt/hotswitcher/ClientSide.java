@@ -264,12 +264,16 @@ public class ClientSide {
                     if (minecraft.screen instanceof AbstractContainerScreen) {
                         container = player.containerMenu.containerId;
                         List<Slot> inv = ((AbstractContainerScreen<?>) minecraft.screen).getMenu().slots;
-                        for (Slot slot : inv) {
-                            if (slot.container == player.getInventory()) {
-                                if (slot.getSlotIndex() == 27) {
-                                    HotSwitcher.LOGGER.debug("Slot number: " + slot.index + " - " + slot.getItem().toString());
-                                    invBottomLeftSlot = slot.index;
-                                    break;
+                        if (inv.get(inv.size() - 18).getSlotIndex() == 27) {
+                            invBottomLeftSlot = inv.size() - 18;
+                        } else {
+                            for (Slot slot : inv) {
+                                if (slot.container == player.getInventory()) {
+                                    if (slot.getSlotIndex() == 27) {
+                                        HotSwitcher.LOGGER.debug("Slot number: " + slot.index + " - " + slot.getItem().toString());
+                                        invBottomLeftSlot = slot.index;
+                                        break;
+                                    }
                                 }
                             }
                         }
