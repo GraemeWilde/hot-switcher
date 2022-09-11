@@ -10,7 +10,7 @@ Requires Forge
 
 HotSwitcher adds keybinds that allow you to cycle your hotbar with your inventory rows. This makes it more convenient to access the other items you have in your inventory by swapping them onto the hotbar without having to open your inventory and manual move them to the hotbar. The addon is only required client side, and is compatible with Vanilla and Realms. There could be compatibility issues with other mods, specifically those that involve changing the inventory, or adding/changing containers.
 
-![](https://s10.gifyu.com/images/in_action2.gif)
+![In Action](https://s10.gifyu.com/images/in_action2.gif)
 
 Usage
 
@@ -24,7 +24,7 @@ Configuration
 
 Keybindings can be setup on the normal keybindings screen under the hotswitcher section. You can access the configuration by entering /hotswitcher into chat (it will show "Unknown or incomplete command" on a server), or binding a key to open the screen.
 
-
+![Config](https://s10.gifyu.com/images/config.gif)
 
 There are keybindings to cycle the hotbar with the inventory rows in forward or reverse order. There are also keybindings to cycle only the active hotbar slot, instead of the entire hotbar (in forward or reverse).
 
